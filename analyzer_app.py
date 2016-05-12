@@ -61,7 +61,7 @@ def make_heatmap():
     
     fig = go.Figure(data=data, layout=layout)
 
-              # Convert the figures to JSON
+    # Convert the figures to JSON
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graphJSON
     
