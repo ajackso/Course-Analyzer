@@ -3,6 +3,8 @@ from flask.ext.wtf import Form
 from wtforms import SelectField, SubmitField
 import random, json, plotly
 import plotly.graph_objs as go
+import pandas as pd
+from pandas import DataFrame, Series
 
 app = Flask(__name__)
 app.config.from_object(__name__)
