@@ -20,7 +20,7 @@ def make_heatmap():
     semesters = ['Semester '+str(num+1) for num in range(8)]
     cs_courses = ['CS'+str(tup[0]) for tup in sortcounts]
     zarray = [tup[1] for tup in sortcounts]
-    colorscale = [[0, '#FFFFFF'], [1, '#5D00FF']]
+    colorscale = [[0, '#FFFFFF'], [1, '#0052fa']]
         
     data = [
         go.Heatmap(
@@ -46,7 +46,7 @@ def make_heatmap():
 def make_custom_heatmap(choice): 
     semesters = ['Semester '+str(num+1) for num in range(8)]
     cs_courses = ['CS'+str(tup[0]) for tup in sortcounts]
-    colorscale = [[0, '#FFFFFF'], [1, '#5D00FF']]
+    colorscale = [[0, '#FFFFFF'], [1, descdict[choice]['color']]]
     
     zarray = []
     
