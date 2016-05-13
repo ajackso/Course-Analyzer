@@ -1,0 +1,18 @@
+/* Andrea Jackson and Kate Kenneally
+CS 249 Spring 2016
+Course Analyzer Final Project
+style.css */
+
+h1, h2, p, form, footer {
+    font-family: 'Open Sans', sans-serif;
+    /* padding-left: 15px; */
+}
+
+#visual {
+    float: left;
+    width: 600px;
+}
+
+#information {
+    margin-left: 600px;
+}
