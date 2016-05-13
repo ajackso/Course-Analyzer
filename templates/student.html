@@ -1,10 +1,16 @@
+<!-- Andrea Jackson and Kate Kenneally
+CS 249 Spring 2016
+Course Analyzer Final Project
+student.html -->
+
+{% import "bootstrap/wtf.html" as wtf %}
+
 <!DOCTYPE html>
 <html lang="en">
     
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
     </head>
     
     <body>
@@ -13,7 +19,38 @@
             <h1>Aggregate Timeline of CS Majors/Minors</h1>
         </header>
         
-        <div id="graph"></div>
+        <div id="container">
+            
+            <div id="visual">
+                <div id="graph"></div>
+            </div>
+        
+            <div id="information">
+                
+                <br>
+                <br>
+
+                <div class="courseform">{{ wtf.quick_form(form) }}</div>
+
+                <p><strong>{{title}}</strong></p>
+
+                <p>{{text}}</p>
+
+                <p>{{current}}</p>
+
+                <p>{{majreq}}</p>
+
+                <p>{{minreq}}</p>
+
+                <p>{{req200}}</p>
+
+                <p>{{req300}}</p>
+
+                <p>{{minpickone}}</p>
+
+            </div>
+            
+        </div>
         
         <footer>
             
