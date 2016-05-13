@@ -65,13 +65,59 @@ def make_heatmap():
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graphJSON
     
+# professor section
+
+#creates a dataframe from a pickle and prepares the data
+def prepareData(dataPkl):
+    csCoursesDF = pd.read_pickle(dataPkl)
+    csCoursesDF = csCoursesDF.replace(['S','F'],[1,9])
+    return csCoursesDF
+
+#generates a dataframe containing the inputted cs course
+def generateCourseDF(df, course):
+    courseDF = df[df.courseid == course]
+    courseDF = courseDF.sort_values(by = ['year', 'term'])
+    return courseDF
+    
+#generates a timeline of CS course enrollments
+def generateTimelineGraph(csDF):
+    sections = ['Fall 2010','Spring 2011','Fall 2011','Spring 2012','Fall 2012','Spring 2013','Fall 2013','Spring 2014','Fall 2014','Spring 2015','Fall 2015','Spring 2016']
+    csData = go.Scatter(
+            x=str(csDF.year)+ " " + str(csDF.term),
+#         x = sections,
+            y=csDF.enrollment,
+            mode = 'lines'
+#         fill ='tozeroy'
+            ) 
+    csMax = go.Scatter(
+            x=str(csDF.year)+ " " + str(csDF.term),
+#         x = sections,
+            y=csDF.max_enrollment,
+            mode = 'lines'
+#         fill ='tozeroy'
+            ) 
+    layout = go.Layout(          
+        title = "timeline of course enrollments, 2010-2016",  
+        xaxis = dict(                 
+            title="date"        
+           )
+        )
+    
+    fig = go.Figure(data=[csData,csMax], layout=layout)
+    # Convert the figures to JSON
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    return graphJSON
+    
 @app.route('/', methods=['POST', 'GET'])
 def index():
     return render_template('index.html')
 
 @app.route('/professor', methods=['POST', 'GET'])
 def professor():
-    return render_template('professor.html')
+    csCoursesDF = prepareData('csCoursesDF.pkl')
+    csDF = generateCourseDF(csCoursesDF, 'CS111')
+    graphJSON = generateTimelineGraph(csDF)
+    return render_template('professor.html', graphJSON=graphJSON)
     
 @app.route('/student', methods=['POST', 'GET'])
 def student():
