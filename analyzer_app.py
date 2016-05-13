@@ -6,6 +6,7 @@ import random, json, plotly
 import plotly.graph_objs as go
 import pandas as pd
 from pandas import DataFrame, Series
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
@@ -146,4 +147,4 @@ def student():
     return render_template('student.html', graphJSON=graphJSON)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
