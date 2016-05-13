@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+from flask.ext.bootstrap import Bootstrap
 from flask.ext.wtf import Form
 from wtforms import SelectField, SubmitField
 import random, json, plotly
@@ -7,6 +8,7 @@ import pandas as pd
 from pandas import DataFrame, Series
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'top secret!'
 app.config.from_object(__name__)
 
 sortcounts = [('110', [21, 15, 15, 3, 3, 2, 1, 0]),
@@ -67,6 +69,13 @@ def make_heatmap():
     
 # professor section
 
+class ChoiceForm(Form):    
+    choice = SelectField(u'CS Courses', choices=[("blank", "Choose a CS course"),
+                                                  ('CS 111', 'CS111'), 
+                                                  ('CS 230', 'CS230')]) 
+                                                                                                
+    submit = SubmitField('Submit')
+    
 #creates a dataframe from a pickle and prepares the data
 def prepareData(dataPkl):
     csCoursesDF = pd.read_pickle(dataPkl)
@@ -114,10 +123,22 @@ def index():
 
 @app.route('/professor', methods=['POST', 'GET'])
 def professor():
-    csCoursesDF = prepareData('csCoursesDF.pkl')
-    csDF = generateCourseDF(csCoursesDF, 'CS111')
-    graphJSON = generateTimelineGraph(csDF)
-    return render_template('professor.html', graphJSON=graphJSON)
+    choice = None
+    ids = []
+    graphJSON = []
+    
+    form = ChoiceForm()
+    if form.validate_on_submit():
+        choice = form.choice.data
+        if choice != "blank":
+            csCoursesDF = prepareData('csCoursesDF.pkl')
+            csDF = generateCourseDF(csCoursesDF, choice)
+            graphJSON = generateTimelineGraph(csDF)
+            ids = ["Bar Chart for {}".format(choice)]
+        form.choice.data = ''
+
+    return render_template('professor.html', form=form, choice=choice, 
+    ids=ids, graphJSON=graphJSON)
     
 @app.route('/student', methods=['POST', 'GET'])
 def student():

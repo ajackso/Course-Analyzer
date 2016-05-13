@@ -1,36 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-    
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
-    </head>
-    
-    <body>
-        
-        <header>
-            <h1>Timeline of Enrollment for course{{coure}}</h1>
-        </header>
+<!-- {% extends "bootstrap/base.html" %} -->
+{% import "bootstrap/wtf.html" as wtf %}
 
-        <div id="graph"></div>
+{% block title %}Course Analyzer App{% endblock %}
 
-        <footer>
-            
-            <!-- D3.js -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-            <!-- jQuery -->
-            <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-            
-            <!-- Plotly.js -->
-            <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script>
-        
-            <script type="text/javascript">
-                var graph = {{graphJSON | safe}};
-                Plotly.plot("graph", graph.data, graph.layout || {});
-            </script>
-            
-        </footer>
-        
-  </body>
-</html>
+{% block navbar %}
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+            <a class="navbar-brand">Course Analyzer App</a>
+        </div>    
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                {{ wtf.quick_form(form) }}
+            </div>
+        </div>
+        <div class="row">
+            {% for id in ids %}
+                <h2>Timeline of Enrollments for course {{choice}}</h2>
+                <div id="{{id}}"></div>
+                {{data | safe}}
+            {% endfor %}
+        </div>
+    </div>
+
+<footer>
+    <!-- D3.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script>
+
+    <script type="text/javascript">
+
+        var graphs = {{graphJSON | safe}};
+        var ids = {{ids | safe}};
+
+        for(var i in graphs) {
+            Plotly.plot(ids[i], // the ID of the div, created above
+                        graphs[i].data,
+                        graphs[i].layout || {});
+        }
+
+    </script>
+</footer>
+
+{% endblock %}
