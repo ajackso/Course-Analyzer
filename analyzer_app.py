@@ -96,14 +96,28 @@ def professor():
 def student():
     graphJSON = make_heatmap()
     choice = None
-    title, text, current, majreq, minreq, req200, req300, minpickone = '', '', '', '', '', '', '', ''
+    text = 'The graph to the left is a heatmap containing data for all CS \
+        courses offered at Wellesley between Fall 2010 and Spring 2016. \
+        The deeper the color, the more students took the course during that \
+        particular semester (as displayed on the x-axis). Semester 4, for \
+        example, means the course was taken during the Spring semester of \
+        sophomore year.'     
+    current = 'This data is pretty overwhelming when viewed all at once, \
+        so we invite you to select a course from the drop-down menu to view \
+        its data alone. You\'ll also receive a brief description (from \
+        Wellesley\'s course browser), as well as some helpful information \
+        about major/minor requirements, Fall 2016 offerings, etc.'       
+    majreq = 'Navigating the CS major or minor at Wellesley can be intimidating, \
+        but we hope this application makes things a little easier!'    
+    title, minreq, req200, req300, minpickone = '', '', '', '', ''
     form = StudentForm()
     if form.validate_on_submit():
         choice = form.choice.data
         if choice != "blank":
             title = descdict[choice].get('title','')
             text = descdict[choice].get('text','')
-            current = descdict[choice].get('current','This course is NOT offered for the Fall 2016 semester.')
+            current = descdict[choice].get('current','This course is NOT offered \
+            for the Fall 2016 semester.')
             majreq = descdict[choice].get('majreq','')
             minreq = descdict[choice].get('minreq','')
             req200 = descdict[choice].get('req200','')
