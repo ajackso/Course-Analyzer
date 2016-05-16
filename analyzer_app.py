@@ -10,7 +10,7 @@ from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
-app.config.from_object(__name__)
+bootstrap = Bootstrap(app)
 
 sortcounts = [('110', [21, 15, 15, 3, 3, 2, 1, 0]),
     ('111', [38, 65, 55, 25, 14, 5, 0, 0]),
@@ -72,15 +72,15 @@ def make_heatmap():
 
 class ChoiceForm(Form):    
     choice = SelectField(u'CS Courses', choices=[("blank", "Choose a CS course"),
-                                                  ('CS 111', 'CS111'), 
-                                                  ('CS 230', 'CS230')]) 
+                                                  ('CS111', 'CS 111'), 
+                                                  ('CS230', 'CS 230')]) 
                                                                                                 
     submit = SubmitField('Submit')
-    
+  
 #creates a dataframe from a pickle and prepares the data
 def prepareData(dataPkl):
     csCoursesDF = pd.read_pickle(dataPkl)
-    csCoursesDF = csCoursesDF.replace(['S','F'],[1,9])
+    csCoursesDF = csCoursesDF.replace(['S','F'],[-0.1,0.1])
     return csCoursesDF
 
 #generates a dataframe containing the inputted cs course
@@ -88,34 +88,51 @@ def generateCourseDF(df, course):
     courseDF = df[df.courseid == course]
     courseDF = courseDF.sort_values(by = ['year', 'term'])
     return courseDF
+
+#returns a list of Fall and Spring strings 
+#to be used as labels for the data points
+def getTerm(df):
+    b = df.term > 0
+    blist = ["Fall" if x > 0 else "Spring" for x in b]
+    return blist
     
-#generates a timeline of CS course enrollments
-def generateTimelineGraph(csDF):
-    sections = ['Fall 2010','Spring 2011','Fall 2011','Spring 2012','Fall 2012','Spring 2013','Fall 2013','Spring 2014','Fall 2014','Spring 2015','Fall 2015','Spring 2016']
-    csData = go.Scatter(
-            x=str(csDF.year)+ " " + str(csDF.term),
-#         x = sections,
-            y=csDF.enrollment,
-            mode = 'lines'
-#         fill ='tozeroy'
-            ) 
-    csMax = go.Scatter(
-            x=str(csDF.year)+ " " + str(csDF.term),
-#         x = sections,
-            y=csDF.max_enrollment,
-            mode = 'lines'
-#         fill ='tozeroy'
-            ) 
-    layout = go.Layout(          
-        title = "timeline of course enrollments, 2010-2016",  
-        xaxis = dict(                 
-            title="date"        
-           )
-        )
-    
-    fig = go.Figure(data=[csData,csMax], layout=layout)
-    # Convert the figures to JSON
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+#generates a graph of CS course enrollments
+def generateGraph(csDF, choice):
+    graph = [ 
+        dict( 
+            data = [ 
+            go.Scatter(
+                x = csDF.year+csDF.term,
+                y = csDF.enrollment,
+                mode = 'markers+lines',
+                marker=dict(
+                size='16',
+                color = 'rgb(67,129,179)',
+                line = dict(
+                width = 1,
+                color = 'rgb(0, 0, 0)'
+                    )
+                ),
+            text = "Prof. " + csDF.instructor + "<br>" + getTerm(csDF),
+            textposition='left',
+            line=dict(
+                shape='vhv' # or linear
+            )
+        ) 
+    ],
+
+          layout = go.Layout( 
+            title = "{} Course Enrollments, 2010-2016".format(choice),           
+            xaxis = dict(                 
+                title="Year"        
+            ),
+            yaxis = dict(                 
+                title="Course enrollment"        
+            )
+        )  
+      )
+    ]
+    graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
     return graphJSON
     
 @app.route('/', methods=['POST', 'GET'])
@@ -127,24 +144,23 @@ def professor():
     choice = None
     ids = []
     graphJSON = []
-    
     form = ChoiceForm()
     if form.validate_on_submit():
         choice = form.choice.data
         if choice != "blank":
-            csCoursesDF = prepareData('csCoursesDF.pkl')
-            csDF = generateCourseDF(csCoursesDF, choice)
-            graphJSON = generateTimelineGraph(csDF)
-            ids = ["Bar Chart for {}".format(choice)]
+            csCoursesDF = prepareData('csCoursesDF.pkl') 
+            csDF = generateCourseDF(csCoursesDF,choice)
+            graphJSON = generateGraph(csDF, choice)
+            ids = ["Timeline of Enrollments for course {}".format(choice)]
         form.choice.data = ''
-
     return render_template('professor.html', form=form, choice=choice, 
-    ids=ids, graphJSON=graphJSON)
-    
+    graphJSON=graphJSON, ids=ids)
+
+      
 @app.route('/student', methods=['POST', 'GET'])
 def student():
     graphJSON = make_heatmap()
     return render_template('student.html', graphJSON=graphJSON)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

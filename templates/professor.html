@@ -1,5 +1,9 @@
+<!-- Andrea Jackson and Kate Kenneally
+CS 249 Spring 2016
+Course Analyzer Final Project
+professor.html -->
 
-{% extends "professor_layout.html" %}
+{% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block title %}Course Analyzer App{% endblock %}
@@ -20,10 +24,9 @@
             </div>
         </div>
         <div class="row">
-            {% for id in ids %}
+             {% for id in ids %}
                 <h2>Timeline of Enrollments for course {{choice}}</h2>
                 <div id="{{id}}"></div>
-                {{data | safe}}
             {% endfor %}
         </div>
     </div>
@@ -43,8 +46,8 @@
 
         for(var i in graphs) {
             Plotly.plot(ids[i], // the ID of the div, created above
-                        graphs[i].data,
-                        graphs[i].layout || {});
+            graphs[i].data,
+            graphs[i].layout || {});
         }
 
     </script>
