@@ -6,30 +6,56 @@ professor.html -->
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Course Analyzer App{% endblock %}
+{% block title %} Course Analyzer App {% endblock %}
 
 {% block navbar %}
-    <nav class="navbar navbar-inverse" role="navigation">
+    <nav class="navbar-nav" role="navigation">
         <div class="container">
-            <a class="navbar-brand">Course Analyzer App</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">Course Analyzer App</a>
         </div>    
     </nav>
 {% endblock %}
 
 {% block content %}
+
     <div class="container">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 {{ wtf.quick_form(form) }}
             </div>
         </div>
-        <div class="row">
-             {% for id in ids %}
-                <h2>Timeline of Enrollments for course {{choice}}</h2>
-                <div id="{{id}}"></div>
-            {% endfor %}
+        <div class = "col-lg-8">
+            <div class="nav nav-tabs" role="tablist">
+                <li class = "active"><a href="#line" aria-controls="line" role="tab" data-toggle="tab">Scatter + Line Graph</a></li>
+                <li ><a href="#bar" aria-controls="bar" role="tab" 
+                data-toggle="tab">Bar Graph</a></li>
+                <li ><a href="#stacked" aria-controls="stacked" role="tab" 
+                data-toggle="tab">Stacked Bar Graph</a></li>
+            </div>
+             <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane fade in active" id="line">
+                    <div class="col-lg-12">        
+                        <div id = "lineGraph"></div>
+                    </div>
+                </div> 
+                <div role="tabpanel" class="tab-pane fade" id="bar">
+                    <div class="col-lg-12">
+                        <div id = "barGraph"></div>
+                    </div>
+                </div> 
+                <div role="tabpanel" class="tab-pane fade" id="stacked">
+                    <div class="col-lg-12">
+                        <div id = "stackGraph"></div>
+                    </div>  
+                </div> 
+            </div>       
         </div>
+        <div class="col-lg-4">
+                <h4 align = "center">Should you open up a new section?</h4>
+        </div> 
     </div>
+
 
 <footer>
     <!-- D3.js -->
@@ -41,16 +67,17 @@ professor.html -->
 
     <script type="text/javascript">
 
-        var graphs = {{graphJSON | safe}};
-        var ids = {{ids | safe}};
+        var lineGraph = {{lineGraphJSON | safe}};
+        Plotly.plot("lineGraph", lineGraph.data,lineGraph.layout || {});
+            
+        var barGraph = {{barGraphJSON | safe}};
+        Plotly.plot("barGraph", barGraph.data, barGraph.layout || {});
 
-        for(var i in graphs) {
-            Plotly.plot(ids[i], // the ID of the div, created above
-            graphs[i].data,
-            graphs[i].layout || {});
-        }
+        var stackedBarGraph = {{stackedBarJSON | safe}};
+        Plotly.plot("stackGraph", stackedBarGraph.data, stackedBarGraph.layout || {});
 
     </script>
+
 </footer>
 
 {% endblock %}
