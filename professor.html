@@ -1,0 +1,83 @@
+<!-- Andrea Jackson and Kate Kenneally
+CS 249 Spring 2016
+Course Analyzer Final Project
+professor.html -->
+    
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %} Course Analyzer App {% endblock %}
+
+{% block navbar %}
+    <nav class="navbar-nav" role="navigation">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Course Analyzer App</a>
+        </div>    
+    </nav>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                {{ wtf.quick_form(form) }}
+            </div>
+        </div>
+        <div class = "col-lg-8">
+            <div class="nav nav-tabs" role="tablist">
+                <li class = "active"><a href="#line" aria-controls="line" role="tab" data-toggle="tab">Scatter + Line Graph</a></li>
+                <li ><a href="#bar" aria-controls="bar" role="tab" 
+                data-toggle="tab">Bar Graph</a></li>
+                <li ><a href="#stacked" aria-controls="stacked" role="tab" 
+                data-toggle="tab">Stacked Bar Graph</a></li>
+            </div>
+             <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane fade in active" id="line">
+                    <div class="col-lg-12">        
+                        <div id = "lineGraph"></div>
+                    </div>
+                </div> 
+                <div role="tabpanel" class="tab-pane fade" id="bar">
+                    <div class="col-lg-12">
+                        <div id = "barGraph"></div>
+                    </div>
+                </div> 
+                <div role="tabpanel" class="tab-pane fade" id="stacked">
+                    <div class="col-lg-12">
+                        <div id = "stackGraph"></div>
+                    </div>  
+                </div> 
+            </div>       
+        </div>
+        <div class="col-lg-4">
+                <h4 align = "center">Should you open up a new section?</h4>
+        </div> 
+    </div>
+
+
+<footer>
+    <!-- D3.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script>
+
+    <script type="text/javascript">
+
+        var lineGraph = {{lineGraphJSON | safe}};
+        Plotly.plot("lineGraph", lineGraph.data,lineGraph.layout || {});
+            
+        var barGraph = {{barGraphJSON | safe}};
+        Plotly.plot("barGraph", barGraph.data, barGraph.layout || {});
+
+        var stackedBarGraph = {{stackedBarJSON | safe}};
+        Plotly.plot("stackGraph", stackedBarGraph.data, stackedBarGraph.layout || {});
+
+    </script>
+
+</footer>
+
+{% endblock %}

@@ -3,7 +3,7 @@
 # Course Analyzer Final Project
 # analyzer_app.py
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.wtf import Form
 from wtforms import SelectField, SubmitField
@@ -11,6 +11,9 @@ import json, plotly
 import plotly.graph_objs as go
 from course_info import sortcounts
 from course_info import descdict
+import pandas as pd
+from pandas import DataFrame, Series
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
@@ -39,7 +42,6 @@ def make_heatmap():
     )
     
     fig = go.Figure(data=data, layout=layout)
-
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graphJSON
     
@@ -83,6 +85,151 @@ class StudentForm(Form):
     menu.extend(course_tups)
     choice = SelectField('', choices=menu)
     submit = SubmitField('Submit')
+
+class ChoiceForm(Form):    
+    choice = SelectField(u'CS Courses', choices=[("blank", "Choose a CS course"),
+                                                  ('CS110', 'CS 110'),
+                                                  ('CS112', 'CS 112'),
+                                                  ('CS114', 'CS 114'),
+                                                  ('CS117', 'CS 117'),
+                                                  ('CS111', 'CS 111'), 
+                                                  ('CS230', 'CS 230')]) 
+                                                                                                
+    submit = SubmitField('Submit')
+  
+#creates a dataframe from a pickle and prepares the data
+def prepareData(dataPkl):
+    csCoursesDF = pd.read_pickle(dataPkl)
+    csCoursesDF = csCoursesDF.replace(['S','F'],[-0.1,0.1])
+    return csCoursesDF
+
+#generates a dataframe containing the inputted cs course
+def generateCourseDF(df, course):
+    courseDF = df[df.courseid == course]
+    courseDF = courseDF.sort_values(by = ['year', 'term'])
+    return courseDF
+
+#returns a list of Fall and Spring strings 
+#to be used as labels for the data points
+def getTerm(df):
+    b = df.term > 0
+    blist = ["Fall" if x > 0 else "Spring" for x in b]
+    return blist
+    
+#generates a line graph of CS course enrollments
+def generateLineGraph(csDF, choice): 
+       data = go.Scatter(
+                x = csDF.year+csDF.term,
+                y = csDF.enrollment,
+                mode = 'markers+lines',
+                marker=dict(
+                size='16',
+                color = 'rgb(67,129,179)',
+                line = dict(
+                width = 1,
+                color = 'rgb(0, 0, 0)'
+                    )
+                ),
+                text = "Prof. " + csDF.instructor + "<br>" + getTerm(csDF),
+                textposition='left',
+                line=dict(
+                    shape='linear' # or vhv
+                )
+            )
+            
+       layout = go.Layout( title = "{} Course Enrollments, 2010-2016".format(choice),           
+                xaxis = dict(                 
+                title="Year"        
+                ),
+                yaxis = dict(                 
+                title="Course enrollment"        
+                )
+            )  
+
+       graph = go.Figure(data = [data], layout = layout)
+       graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
+       return graphJSON
+    
+def getYearListStr(csDF):
+    yearList = csDF.year.tolist()
+    return [str(yr) for yr in yearList]
+def generateBarGraph(csDF, choice):
+    yearListStr = getYearListStr(csDF)
+    data = [
+            go.Bar(
+            x = csDF.year.sum(),
+            y = csDF.enrollment,
+            text = "Prof. " + csDF.instructor + "<br>" + getTerm(csDF)+ " " + yearListStr,
+            name = 'enrollment',
+            marker=dict(
+                color='rgb(121,186,233)'
+            )
+        ), #(15,117,188)
+            go.Scatter(
+                x = csDF.year.sum(),
+                y=csDF.max_enrollment,
+                name = "max enrollment",
+                marker=dict(
+                    color='rgb(15,117,188)'
+                )
+            ) 
+        ]
+        
+    layout = go.Layout(          
+                title = "{} course enrollments, 2010-2016".format(choice),  
+                xaxis = dict( 
+                    title="Year",
+                    ticktext = yearListStr,
+                    tickvals = range(len(yearListStr)),
+                    tickangle=-45
+                ),
+                yaxis = dict(                 
+                    title="Course enrollment"        
+                )
+            )
+    graph = go.Figure(data = data, layout = layout)
+    graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
+    return graphJSON
+
+def generateStack(csDF, choice):
+    csSpringDF = csDF[csDF.term == -0.1]
+    csFallDF = csDF[csDF.term == 0.1]
+
+    csDataSpring = go.Bar(
+        x = csSpringDF.year,
+        y = csSpringDF.enrollment,
+        text = "Prof. " + csSpringDF.instructor,
+        name = 'Spring Enrollment',
+        marker=dict(
+            color='rgb(15,117,188)'
+        )
+    )
+
+    csDataFall = go.Bar(
+        x = csFallDF.year,
+        y = csFallDF.enrollment,
+        text = "Prof. " + csFallDF.instructor,
+        name = 'Fall Enrollment',
+        marker=dict(
+            color='rgb(121,186,233)'
+        )
+    )
+
+    layout = go.Layout(          
+        title = "{} course enrollments, 2010-2016".format(choice), 
+        barmode = 'stack',
+        xaxis = dict( 
+            title="Year"
+        ),
+        yaxis = dict(                 
+            title="Course enrollment"        
+        ),
+        bargap=0.1,
+    )
+
+    graph = go.Figure(data=[csDataFall, csDataSpring], layout=layout)
+    graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
+    return graphJSON
     
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -90,8 +237,24 @@ def index():
 
 @app.route('/professor', methods=['POST', 'GET'])
 def professor():
-    return render_template('professor.html')
-    
+    choice = None
+    csCoursesDF = prepareData('csCoursesDF.pkl')
+    csDF = generateCourseDF(csCoursesDF,"CS111")
+    lineGraphJSON = generateLineGraph(csDF, "CS111")
+    barGraphJSON = generateBarGraph(csDF,"CS111")
+    stackedBarJSON = generateStack(csDF,"CS111")
+    form = ChoiceForm()
+    if form.validate_on_submit():
+        choice = form.choice.data
+        if choice != "blank":
+            csDF = generateCourseDF(csCoursesDF,choice)
+            lineGraphJSON = generateLineGraph(csDF, choice)
+            barGraphJSON = generateBarGraph(csDF,choice)
+            stackedBarJSON = generateStack(csDF,choice)
+            form.choice.data = ''
+    return render_template('professor.html', form=form, choice=choice, 
+    lineGraphJSON=lineGraphJSON, barGraphJSON = barGraphJSON, stackedBarJSON=stackedBarJSON)
+
 @app.route('/student', methods=['POST', 'GET'])
 def student():
     graphJSON = make_heatmap()
@@ -130,4 +293,4 @@ def student():
         req300=req300, minpickone=minpickone, graphJSON=graphJSON)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host = '0.0.0.0',port =8000, debug=True)
