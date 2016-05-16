@@ -3,7 +3,7 @@
 # Course Analyzer Final Project
 # analyzer_app.py
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.wtf import Form
 from wtforms import SelectField, SubmitField
@@ -11,6 +11,9 @@ import json, plotly
 import plotly.graph_objs as go
 from course_info import sortcounts
 from course_info import descdict
+import pandas as pd
+from pandas import DataFrame, Series
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
@@ -39,7 +42,6 @@ def make_heatmap():
     )
     
     fig = go.Figure(data=data, layout=layout)
-
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return graphJSON
     
@@ -83,15 +85,94 @@ class StudentForm(Form):
     menu.extend(course_tups)
     choice = SelectField('', choices=menu)
     submit = SubmitField('Submit')
+
+class ChoiceForm(Form):    
+    choice = SelectField(u'CS Courses', choices=[("blank", "Choose a CS course"),
+                                                  ('CS111', 'CS 111'), 
+                                                  ('CS230', 'CS 230')]) 
+                                                                                                
+    submit = SubmitField('Submit')
+  
+#creates a dataframe from a pickle and prepares the data
+def prepareData(dataPkl):
+    csCoursesDF = pd.read_pickle(dataPkl)
+    csCoursesDF = csCoursesDF.replace(['S','F'],[-0.1,0.1])
+    return csCoursesDF
+
+#generates a dataframe containing the inputted cs course
+def generateCourseDF(df, course):
+    courseDF = df[df.courseid == course]
+    courseDF = courseDF.sort_values(by = ['year', 'term'])
+    return courseDF
+
+#returns a list of Fall and Spring strings 
+#to be used as labels for the data points
+def getTerm(df):
+    b = df.term > 0
+    blist = ["Fall" if x > 0 else "Spring" for x in b]
+    return blist
     
+#generates a graph of CS course enrollments
+def generateGraph(csDF, choice):
+    graph = [ 
+        dict( 
+            data = [ 
+            go.Scatter(
+                x = csDF.year+csDF.term,
+                y = csDF.enrollment,
+                mode = 'markers+lines',
+                marker=dict(
+                size='16',
+                color = 'rgb(67,129,179)',
+                line = dict(
+                width = 1,
+                color = 'rgb(0, 0, 0)'
+                    )
+                ),
+            text = "Prof. " + csDF.instructor + "<br>" + getTerm(csDF),
+            textposition='left',
+            line=dict(
+                shape='vhv' # or linear
+            )
+        ) 
+    ],
+
+          layout = go.Layout( 
+            title = "{} Course Enrollments, 2010-2016".format(choice),           
+            xaxis = dict(                 
+                title="Year"        
+            ),
+            yaxis = dict(                 
+                title="Course enrollment"        
+            )
+        )  
+      )
+    ]
+    graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
+    return graphJSON
+
 @app.route('/', methods=['POST', 'GET'])
 def index():
     return render_template('index.html')
 
 @app.route('/professor', methods=['POST', 'GET'])
 def professor():
-    return render_template('professor.html')
-    
+    choice = None
+    ids = []
+    graphJSON = []
+    form = ChoiceForm()
+    if form.validate_on_submit():
+        choice = form.choice.data
+        if choice != "blank":
+            csCoursesDF = prepareData('csCoursesDF.pkl') 
+            csDF = generateCourseDF(csCoursesDF,choice)
+            graphJSON = generateGraph(csDF, choice)
+            ids = ["Timeline of Enrollments for course {}".format(choice)]
+        form.choice.data = ''
+    return render_template('professor.html', form=form, choice=choice, 
+    graphJSON=graphJSON, ids=ids)
+
+      
 @app.route('/student', methods=['POST', 'GET'])
 def student():
     graphJSON = make_heatmap()
