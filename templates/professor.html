@@ -20,13 +20,14 @@ professor.html -->
 
     <div class="container">
         <div class="row">
-            <div class="form-group col-xs-2">
-                <form class="form form-horizontal" method="post" role="form">
+            <div class="form-group col-xs-3">
+                <form class="form" method="post" role="form">
                     {{ form.hidden_tag() }}
                     {{ wtf.form_errors(form, hiddens="only") }}
-                    {{ wtf.form_field(form.choice, "inlince") }}
-                    {{ wtf.form_field(form.enrollment, "inline") }}
-                    {{ wtf.form_field(form.submit, "horizontal") }}
+                    {{ wtf.form_field(form.choice, "inline") }}
+                    {{ wtf.form_field(form.year, "inline")}}
+                    {{ wtf.form_field(form.enrollment, "inline")}}
+                    {{ wtf.form_field(form.submit, "inline") }}
                 </form>
             </div>   
         </div>
@@ -56,7 +57,59 @@ professor.html -->
             </div>       
         </div>
         <div class="col-lg-4">
-                <h4 align = "center">Analysis</h4>
+                <h3 align = "center" style="color:#4381b3;">Analysis of {{choice|default('CS111',true)}}</h3>
+
+                <h4>Results</h4>     
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>...</th>
+                            <th>...</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{choice|default('CS111',true)}} current enrollment</td>
+                            <td>{{enrollment}}</td>
+                        </tr>
+                        <tr>
+                            <td>Year</td>
+                            <td>{{year}}</td>
+                        </tr>
+                        <tr>
+                            <td>Something</td>
+                            <td>{{year}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Statistics</h4>     
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Statistic</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Minimum enrolled</td>
+                            <td>{{MIN}}</td>
+                        </tr>
+                        <tr>
+                            <td>Max enrolled</td>
+                            <td>{{MAX}}</td>
+                        </tr>
+                        <tr>
+                            <td>Mean enrollment</td>
+                            <td>{{mean}}</td>
+                        </tr>
+                        <tr>
+                            <td>Mean enrollment</td>
+                            <td>{{mean}}</td>
+                        </tr>
+                    </tbody>
+                </table>
         </div> 
     </div>
 
@@ -80,7 +133,6 @@ professor.html -->
         var stackedBarGraph = {{stackedBarJSON | safe}};
         Plotly.plot("stackGraph", stackedBarGraph.data, stackedBarGraph.layout || {});
 
-        var enrollmentVal = enrollmentForm.value()
     </script>
 
 </footer>
