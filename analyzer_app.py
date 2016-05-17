@@ -89,10 +89,10 @@ class StudentForm(Form):
 class ProfessorForm(Form):
     menu = [('blank', 'Choose a course!')]
     course_tups = [('CS'+str(tup[0]), 'CS'+str(tup[0])) for tup in sortcounts]
-    menu.extend(course_tups)    
+    menu.extend(course_tups)   
     choice = SelectField('', choices=menu)  
-    enrollment = IntegerField('Input course enrollment',default=20)  
-    year = IntegerField('Input year',default=2016)                                                                                         
+    enrollment = IntegerField(render_kw={"placeholder": "Enter course enrollment i.e. 25"})    
+    year = IntegerField(render_kw={"placeholder": "Enter course year i.e. 2016"})                                                                                  
     submit = SubmitField('Submit')
   
 #creates a dataframe from a pickle and prepares the data
@@ -237,10 +237,13 @@ def index():
 def professor():        
     choice = None
     enrollment = 0
-    
+    year = 0
+
     csCoursesDF = prepareData('csCoursesDF.pkl')
-    
     csDF = generateCourseDF(csCoursesDF,"CS111")
+    MIN = csDF.enrollment.min()
+    MAX = csDF.enrollment.max()
+    mean = csDF.enrollment.mean()
     lineGraphJSON = generateLineGraph(csDF, "CS111")
     barGraphJSON = generateBarGraph(csDF,"CS111")
     stackedBarJSON = generateStack(csDF,"CS111")
@@ -250,16 +253,20 @@ def professor():
         
         choice = form.choice.data
         enrollment = form.enrollment.data
+        year = form.year.data
 
-        if choice != "blank" and enrollment != 0:
+        if choice != "blank" and enrollment != 0 and year in csDF.year.unique().tolist():
             csDF = generateCourseDF(csCoursesDF,choice)
+            MIN = csDF.enrollment.min()
+            MAX = csDF.enrollment.max()
+            mean = csDF.enrollment.mean()
             lineGraphJSON = generateLineGraph(csDF,choice)
             barGraphJSON = generateBarGraph(csDF,choice)
             stackedBarJSON = generateStack(csDF,choice)
             
     return render_template('professor.html', form=form, 
-    choice=choice, enrollment = enrollment, lineGraphJSON=lineGraphJSON, 
-    barGraphJSON = barGraphJSON, stackedBarJSON=stackedBarJSON)
+    choice=choice, enrollment = enrollment, year=year, lineGraphJSON=lineGraphJSON, 
+    barGraphJSON = barGraphJSON, stackedBarJSON=stackedBarJSON, MIN = MIN, MAX = MAX, mean = mean)
 
 @app.route('/student', methods=['POST', 'GET'])
 def student():
