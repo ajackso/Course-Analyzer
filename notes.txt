@@ -1,0 +1,17 @@
+Kate Kenneally and Andrea Jackson, Spring 2016
+CS 249: Data, Analytics, and Visualization
+
+This folder contains:
++ analyzer_app.py (Kate and Andrea), the Flask app, which runs on port 8000
++ course_info.py (Kate), which contains information necessary for the Flask app
++ Create course analysis algorithm.ipynb (Andrea), which contains preliminary data 
+	analysis for the Professor page of the app
++ studentheatmap.ipynb (Kate), which contains preliminary data analysis for the
+	Student page of the app
++ csCoursesDF.pkl, a pickle containing data used for our analysis
++ static folder, containing:
+	+ style.css (Kate and Andrea), which contains the CSS for the HTML pages
++ templates folder, containing:
+	+ index.html (Kate), the landing page of the app
+	+ professor.html (Andrea), the Professor page of the app
+	+ student.html (Kate), the Student page of the app
