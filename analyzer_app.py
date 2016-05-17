@@ -6,7 +6,7 @@
 from flask import Flask, render_template, request
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.wtf import Form
-from wtforms import SelectField, SubmitField
+from wtforms import SelectField, SubmitField, IntegerField
 import json, plotly
 import plotly.graph_objs as go
 from course_info import sortcounts
@@ -86,15 +86,13 @@ class StudentForm(Form):
     choice = SelectField('', choices=menu)
     submit = SubmitField('Submit')
 
-class ChoiceForm(Form):    
-    choice = SelectField(u'CS Courses', choices=[("blank", "Choose a CS course"),
-                                                  ('CS110', 'CS 110'),
-                                                  ('CS112', 'CS 112'),
-                                                  ('CS114', 'CS 114'),
-                                                  ('CS117', 'CS 117'),
-                                                  ('CS111', 'CS 111'), 
-                                                  ('CS230', 'CS 230')]) 
-                                                                                                
+class ProfessorForm(Form):
+    menu = [('blank', 'Choose a course!')]
+    course_tups = [('CS'+str(tup[0]), 'CS'+str(tup[0])) for tup in sortcounts]
+    menu.extend(course_tups)    
+    choice = SelectField('', choices=menu)  
+    enrollment = IntegerField('Input course enrollment',default=20)  
+    year = IntegerField('Input year',default=2016)                                                                                         
     submit = SubmitField('Submit')
   
 #creates a dataframe from a pickle and prepares the data
@@ -236,24 +234,32 @@ def index():
     return render_template('index.html')
 
 @app.route('/professor', methods=['POST', 'GET'])
-def professor():
+def professor():        
     choice = None
+    enrollment = 0
+    
     csCoursesDF = prepareData('csCoursesDF.pkl')
+    
     csDF = generateCourseDF(csCoursesDF,"CS111")
     lineGraphJSON = generateLineGraph(csDF, "CS111")
     barGraphJSON = generateBarGraph(csDF,"CS111")
     stackedBarJSON = generateStack(csDF,"CS111")
-    form = ChoiceForm()
-    if form.validate_on_submit():
+    
+    form = ProfessorForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        
         choice = form.choice.data
-        if choice != "blank":
+        enrollment = form.enrollment.data
+
+        if choice != "blank" and enrollment != 0:
             csDF = generateCourseDF(csCoursesDF,choice)
-            lineGraphJSON = generateLineGraph(csDF, choice)
+            lineGraphJSON = generateLineGraph(csDF,choice)
             barGraphJSON = generateBarGraph(csDF,choice)
             stackedBarJSON = generateStack(csDF,choice)
-            form.choice.data = ''
-    return render_template('professor.html', form=form, choice=choice, 
-    lineGraphJSON=lineGraphJSON, barGraphJSON = barGraphJSON, stackedBarJSON=stackedBarJSON)
+            
+    return render_template('professor.html', form=form, 
+    choice=choice, enrollment = enrollment, lineGraphJSON=lineGraphJSON, 
+    barGraphJSON = barGraphJSON, stackedBarJSON=stackedBarJSON)
 
 @app.route('/student', methods=['POST', 'GET'])
 def student():
